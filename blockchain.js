@@ -4,15 +4,39 @@ class Block {
   constructor(index, data, previousHash){
     this.index = index;
     this.timestamp = new Date();
-    this.previousHash = previousHash;
     this.data = data;
-    this.hash = this.calculateHash();
+    this.previousHash = previousHash;
+    // this.hash = this.calculateHash();
+    var res = this.computeHashWithProofOfWork();
+    this.nonce = res[0];
+    this.hash = res[1];
+  }
+  //
+  // calculateHash(){
+  //   var sha = SHA256.create();
+  //   sha.update (this.index.toString() + this.timestamp.toString() +
+  //               this.data.toString());
+  //   return sha.hex();
+  // }
+
+  // keep 'mining' unti
+  computeHashWithProofOfWork(difficulty='00'){
+    var nonce = 0;
+    while (true){
+      var hash = this.calcHashWithNonce(nonce);
+      if (hash.startsWith(difficulty)){
+        return [nonce, hash];
+      } else {
+        nonce += 1;
+      }
+    }
   }
 
-  calculateHash(){
+  calcHashWithNonce(nonce = 0){
     var sha = SHA256.create();
-    sha.update (this.index.toString() + this.timestamp.toString() +
-                this.data.toString());
+    sha.update(nonce.toString() + this.index.toString() +
+              this.timestamp.toString() + this.data + this.previousHash);
+    return sha.hex();
   }
   static first( data = "Genesis"){
     return new Block(0, data, '0');
