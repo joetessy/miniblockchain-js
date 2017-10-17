@@ -6,20 +6,16 @@ class Block {
     this.timestamp = new Date();
     this.data = data;
     this.previousHash = previousHash;
-    // this.hash = this.calculateHash();
     var res = this.computeHashWithProofOfWork();
     this.nonce = res[0];
     this.hash = res[1];
   }
-  //
-  // calculateHash(){
-  //   var sha = SHA256.create();
-  //   sha.update (this.index.toString() + this.timestamp.toString() +
-  //               this.data.toString());
-  //   return sha.hex();
-  // }
 
-  // keep 'mining' unti
+
+  // POW system
+  // Deter atacks - make it more economically difficult to sabotage than collaborate.
+  // Keep calculating hash with different nonce values until returns one starting with '00';
+
   computeHashWithProofOfWork(difficulty='00'){
     var nonce = 0;
     while (true){
@@ -27,29 +23,37 @@ class Block {
       if (hash.startsWith(difficulty)){
         return [nonce, hash];
       } else {
+        // Hash is to be recomputed with different nonce value
         nonce += 1;
       }
     }
   }
 
+  // Changing the nonce value will make the hash completely different
   calcHashWithNonce(nonce = 0){
     var sha = SHA256.create();
     sha.update(nonce.toString() + this.index.toString() +
               this.timestamp.toString() + this.data + this.previousHash);
     return sha.hex();
   }
-  static first( data = "Genesis"){
+  static first(...args){
+    var data = args.length === 1 ? args[0] : args;
     return new Block(0, data, '0');
   }
 
-  static next(previous, data='Transaction Data...'){
+  static next(previous, ...args){
+    var data = args.length === 1 ? args[0] : args;
     return new Block(previous.index + 1, data, previous.hash);
   }
 }
 
-let b0 = Block.first("Genesis");
-let b1 = Block.next(b0, 'Transaction Data...');
-let b2 = Block.next(b1, 'More data....');
+let b0 = Block.first({from: 'Joe', to: 'Jon', amount: 5});
+let b1 = Block.next(b0,
+  {from: 'Jon', to: 'Joe', amount: 10},
+  {from: 'Sally', to: 'Joe', amount: 15});
+let b2 = Block.next(b1,
+  {from: 'Sally', to: 'Jon', amount: 30},
+  {from: 'Jon', to: 'Joe', amount: 10});
 let blockchain = [b0, b1, b2];
 
-console.log(blockchain);
+console.dir( blockchain, { depth: 3 } );
